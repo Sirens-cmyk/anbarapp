@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>انباردار هوشمند | Anbar Pro</title>
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Vazirmatn', 'sans-serif'] },
+          colors: { darkbg: '#09090b', cardbg: '#121216', gold: '#f59e0b', teal: '#14b8a6' }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    body { background-color: #09090b; color: #f4f4f5; font-family: 'Vazirmatn', sans-serif; padding-bottom: 85px; overflow-x: hidden; }
+    .glass { background: rgba(24, 24, 30, 0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .gold-gradient { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .teal-gradient { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+    .tab-content { display: none; animation: fadeIn 0.25s ease-out; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="select-none">
+
+  <header class="sticky top-0 z-30 glass px-4 py-3 flex items-center justify-between border-b border-zinc-800/80">
+    <div class="flex items-center gap-3">
+      <button onclick="toggleDrawer()" class="p-2 rounded-xl bg-zinc-800/80 text-amber-400 active:scale-95 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h10"/></svg>
+      </button>
+      <div>
+        <h1 class="text-base font-bold text-white tracking-tight">مدیریت هوشمند انبار</h1>
+        <p id="today-date" class="text-[11px] text-teal-400 font-medium"></p>
+      </div>
+    </div>
+    <span id="sync-badge" class="text-[10px] px-2.5 py-1 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20">آماده</span>
+  </header>
+
+  <div id="drawer-overlay" onclick="toggleDrawer()" class="fixed inset-0 bg-black/70 z-40 hidden backdrop-blur-sm transition-opacity"></div>
+  <aside id="drawer" class="fixed top-0 right-0 h-full w-72 bg-[#101014] border-l border-zinc-800 z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between p-5">
+    <div>
+      <div class="flex items-center justify-between pb-5 border-b border-zinc-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl gold-gradient flex items-center justify-center text-black font-black text-lg shadow-lg shadow-amber-500/20">A</div>
+          <div>
+            <h2 class="font-bold text-white text-sm">انباردار حرفه‌ای</h2>
+            <span class="text-[11px] text-zinc-400">نسخه ابری و آفلاین</span>
+          </div>
+        </div>
+        <button onclick="toggleDrawer()" class="text-zinc-400 hover:text-white p-1">✕</button>
+      </div>
+      <nav class="mt-6 space-y-2 text-sm">
+        <button onclick="switchTab('dashboard'); toggleDrawer()" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-zinc-800/70 text-zinc-200 transition"><span>📊</span> داشبورد و گزارشات</button>
+        <button onclick="switchTab('items'); toggleDrawer()" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-zinc-800/70 text-zinc-200 transition"><span>📦</span> لیست کالاهای انبار</button>
+        <button onclick="switchTab('transactions'); toggleDrawer()" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-zinc-800/70 text-zinc-200 transition"><span>🔄</span> ثبت ورود و خروج</button>
+        <button onclick="switchTab('backup'); toggleDrawer()" class="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl hover:bg-zinc-800/70 text-amber-400 transition"><span>💾</span> ذخیره در پوشه گوشی و اکسل</button>
+      </nav>
+    </div>
+    <div class="p-3.5 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-xs text-zinc-400 space-y-1">
+      <p class="text-zinc-300 font-semibold">مسیر ذخیره در حافظه گوشی:</p>
+      <p class="font-mono text-[11px] text-teal-400 text-left">/Download/AnbarPro/</p>
+    </div>
+  </aside>
+  <main class="p-4 max-w-lg mx-auto space-y-4">
+
+    <!-- ۱. تب داشبورد -->
+    <section id="tab-dashboard" class="tab-content active space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="glass rounded-2xl p-4 relative overflow-hidden">
+          <div class="absolute -left-3 -top-3 w-14 h-14 rounded-full bg-amber-500/10"></div>
+          <p class="text-xs text-zinc-400">تعداد اقلام کالا</p>
+          <p id="stat-total-items" class="text-2xl font-black text-white mt-1">0</p>
+          <span class="text-[10px] text-amber-400">کد کالای فعال</span>
+        </div>
+        <div class="glass rounded-2xl p-4 relative overflow-hidden">
+          <div class="absolute -left-3 -top-3 w-14 h-14 rounded-full bg-teal-500/10"></div>
+          <p class="text-xs text-zinc-400">مجموع موجودی</p>
+          <p id="stat-total-stock" class="text-2xl font-black text-teal-400 mt-1">0</p>
+          <span class="text-[10px] text-zinc-400">واحد در انبار</span>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-4 flex items-center justify-between border-r-4 border-r-amber-500">
+        <div>
+          <p class="text-xs text-zinc-400">ارزش کل موجودی انبار</p>
+          <p class="text-xl font-extrabold text-amber-400 mt-1"><span id="stat-total-value">0</span> <span class="text-xs font-normal text-zinc-300">تومان</span></p>
+        </div>
+        <button onclick="openAddModal()" class="gold-gradient text-black font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition">
+          + کالای جدید
+        </button>
+      </div>
+
+      <div id="low-stock-box" class="hidden glass rounded-2xl p-4 border border-rose-500/30 bg-rose-950/10">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-xs font-bold text-rose-400 flex items-center gap-1.5">⚠️ هشدار کالاهای رو به اتمام</h3>
+          <span id="low-stock-count" class="text-[11px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full">0</span>
+        </div>
+        <div id="low-stock-list" class="space-y-1.5 text-xs"></div>
+      </div>
+
+      <div class="glass rounded-2xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-white">آخرین ورود و خروج‌ها</h3>
+          <button onclick="switchTab('transactions')" class="text-xs text-teal-400">مشاهده همه</button>
+        </div>
+        <div id="recent-transactions" class="space-y-2.5">
+          <p class="text-xs text-zinc-500 text-center py-4">هنوز تراکنشی ثبت نشده است.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ۲. تب لیست کالاها -->
+    <section id="tab-items" class="tab-content space-y-3">
+      <div class="flex gap-2">
+        <input id="search-input" oninput="renderItems()" type="text" placeholder="جستجو نام، کد کالا یا دسته‌بندی..." class="w-full glass rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500" />
+        <button onclick="openAddModal()" class="gold-gradient text-black font-bold px-4 rounded-xl text-lg shrink-0 active:scale-95 transition">+</button>
+      </div>
+      <div id="items-list" class="space-y-2.5"></div>
+    </section>
+
+    <!-- ۳. تب ثبت ورود و خروج -->
+    <section id="tab-transactions" class="tab-content space-y-4">
+      <div class="glass rounded-2xl p-4 space-y-3">
+        <h3 class="text-sm font-bold text-amber-400">ثبت حواله ورود / خروج جدید</h3>
+        <div class="grid grid-cols-2 gap-2 p-1 bg-zinc-900 rounded-xl">
+          <button type="button" id="btn-type-in" onclick="setTxType('in')" class="py-2 rounded-lg text-xs font-bold bg-teal-600 text-white transition">📥 ورود به انبار</button>
+          <button type="button" id="btn-type-out" onclick="setTxType('out')" class="py-2 rounded-lg text-xs font-bold text-zinc-400 transition">📤 خروج از انبار</button>
+        </div>
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">انتخاب کالا</label>
+          <select id="tx-item-select" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="text-[11px] text-zinc-400 block mb-1">تعداد / مقدار</label>
+            <input id="tx-qty" type="number" min="0.01" step="any" placeholder="مثلاً: 10" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500" />
+          </div>
+          <div>
+            <label class="text-[11px] text-zinc-400 block mb-1">تحویل‌گیرنده / تامین‌کننده</label>
+            <input id="tx-person" type="text" placeholder="نام شخص یا بخش" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500" />
+          </div>
+        </div>
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">توضیحات (اختیاری)</label>
+          <input id="tx-note" type="text" placeholder="شماره فاکتور یا شرح حواله..." class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-teal-500" />
+        </div>
+        <button onclick="submitTransaction()" class="w-full teal-gradient text-white font-bold py-3 rounded-xl text-xs shadow-lg shadow-teal-500/20 active:scale-95 transition">
+          ثبت نهایی تراکنش و ذخیره در گوشی
+        </button>
+      </div>
+      <div class="glass rounded-2xl p-4">
+        <h3 class="text-sm font-bold text-white mb-3">تاریخچه کامل تراکنش‌ها</h3>
+        <div id="all-transactions" class="space-y-2.5"></div>
+      </div>
+    </section>
+    <!-- ۴. تب بکاپ، پوشه گوشی و اکسل -->
+    <section id="tab-backup" class="tab-content space-y-4">
+      <div class="glass rounded-2xl p-4 space-y-3">
+        <h3 class="text-sm font-bold text-amber-400">ذخیره‌سازی در حافظه گوشی</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed">
+          اطلاعات شما به صورت خودکار پس از هر تغییر به برنامه ارسال می‌شود تا در پوشه <span class="text-teal-400 font-mono">Download/AnbarPro</span> ذخیره گردد. از دکمه‌های زیر نیز می‌توانید مستقیماً خروجی بگیرید:
+        </p>
+        <button onclick="syncToPhoneFolder('SAVE_JSON')" class="w-full gold-gradient text-black font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition">
+          <span>💾</span> ذخیره فایل پشتیبان (JSON) در پوشه گوشی
+        </button>
+        <button onclick="exportCSVToPhone()" class="w-full teal-gradient text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition">
+          <span>📊</span> ساخت فایل اکسل (CSV) در پوشه گوشی
+        </button>
+        <button onclick="requestRestoreFromPhone()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 border border-zinc-700 active:scale-95 transition">
+          <span>📂</span> خواندن و بازیابی اطلاعات از پوشه گوشی
+        </button>
+      </div>
+      <div class="glass rounded-2xl p-4 space-y-3">
+        <h3 class="text-xs font-bold text-zinc-300">بازیابی دستی فایل پشتیبان</h3>
+        <input type="file" id="manual-file-input" accept=".json" onchange="manualRestore(event)" class="block w-full text-xs text-zinc-400 file:ml-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-zinc-800 file:text-amber-400" />
+      </div>
+    </section>
+
+  </main>
+
+  <!-- مودال افزودن / ویرایش کالا -->
+  <div id="item-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="glass bg-[#141418] w-full max-w-md rounded-2xl p-5 border border-zinc-800 space-y-3">
+      <div class="flex items-center justify-between border-b border-zinc-800 pb-3">
+        <h3 id="modal-title" class="text-sm font-bold text-amber-400">افزودن کالای جدید</h3>
+        <button onclick="closeItemModal()" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <input type="hidden" id="edit-item-id" />
+      <div class="grid grid-cols-2 gap-2.5">
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">نام کالا *</label>
+          <input id="item-name" type="text" placeholder="مثلاً: پیچ متری" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">کد کالا *</label>
+          <input id="item-code" type="text" placeholder="مثلاً: K-101" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">دسته‌بندی</label>
+          <input id="item-cat" type="text" placeholder="یراق‌آلات / مواد اولیه" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">واحد شمارش</label>
+          <select id="item-unit" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="عدد">عدد</option>
+            <option value="کیلوگرم">کیلوگرم</option>
+            <option value="متر">متر</option>
+            <option value="کارتن">کارتن</option>
+            <option value="بسته">بسته</option>
+            <option value="لیتر">لیتر</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">موجودی فعلی</label>
+          <input id="item-stock" type="number" value="0" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">حداقل موجودی</label>
+          <input id="item-min" type="number" value="5" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="text-[11px] text-zinc-400 block mb-1">قیمت واحد (تومان)</label>
+          <input id="item-price" type="number" value="0" class="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+      </div>
+      <button onclick="saveItem()" class="w-full gold-gradient text-black font-bold py-3 rounded-xl text-xs mt-2 active:scale-95 transition">
+        ذخیره اطلاعات کالا
+      </button>
+    </div>
+  </div>
+
+  <!-- نوار ناوبری پایین -->
+  <nav class="fixed bottom-0 inset-x-0 glass border-t border-zinc-800/90 z-30 px-2 py-2 flex justify-around items-center">
+    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center gap-1 text-amber-400 text-[11px] font-bold"><span class="text-lg">📊</span><span>داشبورد</span></button>
+    <button onclick="switchTab('items')" id="nav-items" class="nav-btn flex flex-col items-center gap-1 text-zinc-400 text-[11px]"><span class="text-lg">📦</span><span>کالاها</span></button>
+    <button onclick="switchTab('transactions')" id="nav-transactions" class="nav-btn flex flex-col items-center gap-1 text-zinc-400 text-[11px]"><span class="text-lg">🔄</span><span>ورود/خروج</span></button>
+    <button onclick="switchTab('backup')" id="nav-backup" class="nav-btn flex flex-col items-center gap-1 text-zinc-400 text-[11px]"><span class="text-lg">💾</span><span>ذخیره/اکسل</span></button>
+  </nav>
+
+  <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-zinc-900 border border-teal-500/40 text-white text-xs px-4 py-2.5 rounded-full shadow-xl z-50 hidden"></div>
+
+  <script>
+    let db = JSON.parse(localStorage.getItem('anbar_pro_db')) || { items: [], transactions: [] };
+    let currentTxType = 'in';
+
+    function getPersianDate(includeTime = false) {
+      const now = new Date();
+      const dateStr = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+      if (!includeTime) return dateStr;
+      const timeStr = new Intl.DateTimeFormat('fa-IR', { hour: '2-digit', minute: '2-digit' }).format(now);
+      return `${dateStr} - ${timeStr}`;
+    }
+
+    document.getElementById('today-date').innerText = new Intl.DateTimeFormat('fa-IR', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    }).format(new Date());
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 2600);
+    }
+
+    function syncToPhoneFolder(action = 'AUTO_SAVE') {
+      localStorage.setItem('anbar_pro_db', JSON.stringify(db));
+      const payload = JSON.stringify({
+        action: action,
+        filename: 'anbar_backup.json',
+        updatedAt: getPersianDate(true),
+        data: db
+      });
+      if (window.AppInventor && window.AppInventor.setWebViewString) {
+        window.AppInventor.setWebViewString(payload);
+        document.getElementById('sync-badge').innerText = 'ذخیره در گوشی ✓';
+      } else if (action === 'SAVE_JSON') {
+        downloadFile(JSON.stringify(db, null, 2), 'anbar_backup.json', 'application/json');
+      }
+    }
+
+    function exportCSVToPhone() {
+      let csv = '\uFEFFکد کالا,نام کالا,دسته‌بندی,واحد,موجودی فعلی,حداقل موجودی,قیمت واحد,ارزش کل\n';
+      db.items.forEach(item => {
+        const totalVal = (Number(item.stock) || 0) * (Number(item.price) || 0);
+        csv += `"${item.code}","${item.name}","${item.category || '-'}","${item.unit}",${item.stock},${item.minStock},${item.price},${totalVal}\n`;
+      });
+      if (window.AppInventor && window.AppInventor.setWebViewString) {
+        window.AppInventor.setWebViewString(JSON.stringify({
+          action: 'EXPORT_CSV',
+          filename: `Anbar_Report_${Date.now()}.csv`,
+          csvContent: csv
+        }));
+        showToast('درخواست ساخت فایل اکسل در پوشه گوشی ارسال شد');
+      } else {
+        downloadFile(csv, 'Anbar_Report.csv', 'text/csv;charset=utf-8;');
+        showToast('فایل اکسل دانلود شد');
+      }
+    }
+
+    function requestRestoreFromPhone() {
+      if (window.AppInventor && window.AppInventor.setWebViewString) {
+        window.AppInventor.setWebViewString(JSON.stringify({ action: 'LOAD_JSON' }));
+        showToast('در حال خواندن فایل از پوشه گوشی...');
+      } else {
+        showToast('از بخش بازیابی دستی پایین فایل JSON را انتخاب کنید');
+      }
+    }
+
+    window.loadFromAndroid = function(jsonStr) {
+      try {
+        const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+        const actualData = parsed.data ? parsed.data : parsed;
+        if (actualData && Array.isArray(actualData.items)) {
+          db = actualData;
+          localStorage.setItem('anbar_pro_db', JSON.stringify(db));
+          refreshAll();
+          showToast('اطلاعات با موفقیت از حافظه گوشی بازیابی شد ✅');
+        }
+      } catch (e) {
+        showToast('خطا در خواندن ساختار فایل پشتیبان');
+      }
+    };
+    function downloadFile(content, fileName, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function manualRestore(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => window.loadFromAndroid(e.target.result);
+      reader.readAsText(file);
+    }
+
+    function toggleDrawer() {
+      const drawer = document.getElementById('drawer');
+      const overlay = document.getElementById('drawer-overlay');
+      const isClosed = drawer.classList.contains('translate-x-full');
+      if (isClosed) {
+        drawer.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        drawer.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-amber-400', 'font-bold');
+        btn.classList.add('text-zinc-400');
+      });
+      const activeBtn = document.getElementById(`nav-${tabName}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-zinc-400');
+        activeBtn.classList.add('text-amber-400', 'font-bold');
+      }
+      refreshAll();
+    }
+
+    function openAddModal(item = null) {
+      document.getElementById('item-modal').classList.remove('hidden');
+      document.getElementById('item-modal').classList.add('flex');
+      if (item) {
+        document.getElementById('modal-title').innerText = 'ویرایش کالا';
+        document.getElementById('edit-item-id').value = item.id;
+        document.getElementById('item-name').value = item.name;
+        document.getElementById('item-code').value = item.code;
+        document.getElementById('item-cat').value = item.category || '';
+        document.getElementById('item-unit').value = item.unit;
+        document.getElementById('item-stock').value = item.stock;
+        document.getElementById('item-min').value = item.minStock;
+        document.getElementById('item-price').value = item.price;
+      } else {
+        document.getElementById('modal-title').innerText = 'افزودن کالای جدید';
+        document.getElementById('edit-item-id').value = '';
+        document.getElementById('item-name').value = '';
+        document.getElementById('item-code').value = 'K-' + (db.items.length + 101);
+        document.getElementById('item-cat').value = '';
+        document.getElementById('item-stock').value = '0';
+        document.getElementById('item-min').value = '5';
+        document.getElementById('item-price').value = '0';
+      }
+    }
+
+    function closeItemModal() {
+      document.getElementById('item-modal').classList.add('hidden');
+      document.getElementById('item-modal').classList.remove('flex');
+    }
+
+    function saveItem() {
+      const id = document.getElementById('edit-item-id').value;
+      const name = document.getElementById('item-name').value.trim();
+      const code = document.getElementById('item-code').value.trim();
+      if (!name || !code) return showToast('نام و کد کالا الزامی است!');
+
+      const itemObj = {
+        id: id || Date.now().toString(),
+        name,
+        code,
+        category: document.getElementById('item-cat').value.trim() || 'عمومی',
+        unit: document.getElementById('item-unit').value,
+        stock: Number(document.getElementById('item-stock').value) || 0,
+        minStock: Number(document.getElementById('item-min').value) || 0,
+        price: Number(document.getElementById('item-price').value) || 0
+      };
+
+      if (id) {
+        const idx = db.items.findIndex(x => x.id === id);
+        if (idx > -1) db.items[idx] = itemObj;
+        showToast('کالا ویرایش شد');
+      } else {
+        db.items.unshift(itemObj);
+        showToast('کالای جدید اضافه شد');
+      }
+
+      closeItemModal();
+      syncToPhoneFolder('AUTO_SAVE');
+      refreshAll();
+    }
+
+    function deleteItem(id) {
+      if (!confirm('این کالا حذف شود؟')) return;
+      db.items = db.items.filter(x => x.id !== id);
+      syncToPhoneFolder('AUTO_SAVE');
+      refreshAll();
+      showToast('کالا حذف شد');
+    }
+
+    function setTxType(type) {
+      currentTxType = type;
+      const btnIn = document.getElementById('btn-type-in');
+      const btnOut = document.getElementById('btn-type-out');
+      if (type === 'in') {
+        btnIn.className = 'py-2 rounded-lg text-xs font-bold bg-teal-600 text-white transition';
+        btnOut.className = 'py-2 rounded-lg text-xs font-bold text-zinc-400 transition';
+      } else {
+        btnOut.className = 'py-2 rounded-lg text-xs font-bold bg-rose-600 text-white transition';
+        btnIn.className = 'py-2 rounded-lg text-xs font-bold text-zinc-400 transition';
+      }
+    }
+
+    function submitTransaction() {
+      const itemId = document.getElementById('tx-item-select').value;
+      const qty = Number(document.getElementById('tx-qty').value);
+      const person = document.getElementById('tx-person').value.trim();
+      const note = document.getElementById('tx-note').value.trim();
+
+      if (!itemId) return showToast('ابتدا یک کالا تعریف و انتخاب کنید');
+      if (!qty || qty <= 0) return showToast('تعداد معتبر وارد کنید');
+
+      const item = db.items.find(x => x.id === itemId);
+      if (!item) return;
+
+      if (currentTxType === 'out' && item.stock < qty) {
+        return showToast(`موجودی کافی نیست! (موجودی فعلی: ${item.stock} ${item.unit})`);
+      }
+
+      item.stock = currentTxType === 'in' ? item.stock + qty : item.stock - qty;
+
+      db.transactions.unshift({
+        id: Date.now().toString(),
+        itemId: item.id,
+        itemName: item.name,
+        itemCode: item.code,
+        unit: item.unit,
+        type: currentTxType,
+        qty,
+        person: person || '-',
+        note: note || '',
+        date: getPersianDate(true)
+      });
+
+      document.getElementById('tx-qty').value = '';
+      document.getElementById('tx-person').value = '';
+      document.getElementById('tx-note').value = '';
+
+      syncToPhoneFolder('AUTO_SAVE');
+      refreshAll();
+      showToast(currentTxType === 'in' ? 'ورود کالا ثبت شد ✅' : 'خروج کالا ثبت شد ✅');
+    }
+
+    function refreshAll() {
+      document.getElementById('stat-total-items').innerText = db.items.length.toLocaleString('fa-IR');
+      const totalStock = db.items.reduce((acc, cur) => acc + (Number(cur.stock) || 0), 0);
+      const totalValue = db.items.reduce((acc, cur) => acc + ((Number(cur.stock) || 0) * (Number(cur.price) || 0)), 0);
+      document.getElementById('stat-total-stock').innerText = totalStock.toLocaleString('fa-IR');
+      document.getElementById('stat-total-value').innerText = totalValue.toLocaleString('fa-IR');
+
+      const lowItems = db.items.filter(x => x.stock <= x.minStock);
+      const lowBox = document.getElementById('low-stock-box');
+      if (lowItems.length > 0) {
+        lowBox.classList.remove('hidden');
+        document.getElementById('low-stock-count').innerText = lowItems.length + ' مورد';
+        document.getElementById('low-stock-list').innerHTML = lowItems.map(i => `
+          <div class="flex justify-between items-center bg-rose-500/10 px-3 py-1.5 rounded-lg">
+            <span class="text-zinc-200">${i.name} (${i.code})</span>
+            <span class="text-rose-400 font-bold">${i.stock} ${i.unit}</span>
+          </div>
+        `).join('');
+      } else {
+        lowBox.classList.add('hidden');
+      }
+
+      const select = document.getElementById('tx-item-select');
+      select.innerHTML = db.items.length
+        ? db.items.map(i => `<option value="${i.id}">${i.name} (${i.code}) - موجودی: ${i.stock} ${i.unit}</option>`).join('')
+        : '<option value="">ابتدا کالا اضافه کنید</option>';
+
+      renderItems();
+
+      const txHtml = (list) => list.length ? list.map(t => `
+        <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${t.type === 'in' ? 'bg-teal-500/15 text-teal-400' : 'bg-rose-500/15 text-rose-400'}">
+              ${t.type === 'in' ? '📥' : '📤'}
+            </span>
+            <div>
+              <p class="text-xs font-bold text-white">${t.itemName} <span class="text-[10px] text-zinc-500">(${t.itemCode})</span></p>
+              <p class="text-[10px] text-zinc-400">${t.date} ${t.person !== '-' ? '• ' + t.person : ''}</p>
+            </div>
+          </div>
+          <div class="text-left">
+            <span class="text-xs font-extrabold ${t.type === 'in' ? 'text-teal-400' : 'text-rose-400'}">
+              ${t.type === 'in' ? '+' : '-'}${t.qty} ${t.unit}
+            </span>
+          </div>
+        </div>
+      `).join('') : '<p class="text-xs text-zinc-500 text-center py-4">تراکنشی وجود ندارد.</p>';
+
+      document.getElementById('recent-transactions').innerHTML = txHtml(db.transactions.slice(0, 5));
+      document.getElementById('all-transactions').innerHTML = txHtml(db.transactions);
+    }
+
+    function renderItems() {
+      const q = document.getElementById('search-input').value.trim().toLowerCase();
+      const filtered = db.items.filter(i =>
+        i.name.toLowerCase().includes(q) ||
+        i.code.toLowerCase().includes(q) ||
+        (i.category && i.category.toLowerCase().includes(q))
+      );
+
+      const container = document.getElementById('items-list');
+      if (!filtered.length) {
+        container.innerHTML = '<div class="glass rounded-2xl p-8 text-center text-xs text-zinc-500">کالایی یافت نشد. روی دکمه + بزنید.</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const isLow = item.stock <= item.minStock;
+        return `
+          <div class="glass rounded-2xl p-4 flex items-center justify-between border-r-4 ${isLow ? 'border-r-rose-500' : 'border-r-teal-500'}">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-bold text-white">${item.name}</h4>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-amber-400 font-mono">${item.code}</span>
+              </div>
+              <p class="text-[11px] text-zinc-400">دسته: ${item.category} • قیمت: ${Number(item.price).toLocaleString('fa-IR')} ت</p>
+              <div class="flex items-center gap-3 pt-1">
+                <button onclick='openAddModal(${JSON.stringify(item)})' class="text-[11px] text-teal-400">✏️ ویرایش</button>
+                <button onclick="deleteItem('${item.id}')" class="text-[11px] text-rose-400">🗑️ حذف</button>
+              </div>
+            </div>
+            <div class="text-left">
+              <p class="text-lg font-black ${isLow ? 'text-rose-400' : 'text-white'}">${item.stock}</p>
+              <span class="text-[11px] text-zinc-400">${item.unit}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    refreshAll();
+  </script>
+</body>
+</html>
